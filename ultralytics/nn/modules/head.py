@@ -14,8 +14,71 @@ from .block import DFL, BNContrastiveHead, ContrastiveHead, Proto
 from .conv import Conv, DWConv
 from .transformer import MLP, DeformableTransformerDecoder, DeformableTransformerDecoderLayer
 from .utils import bias_init_with_prob, linear_init
-
+from .temporal import ConvLSTMCell, YOLOConvLSTM, YOLOTemporalNeck
 __all__ = "Detect", "Segment", "Pose", "Classify", "OBB", "RTDETRDecoder", "v10Detect"
+
+class TemporalDetectionHead(nn.Module):
+    def __init__(self, channels, nc, temporal_channels):
+        super().__init__()
+        
+        # Temporal feature integration layers
+        self.temporal_fusion = nn.ModuleList([
+            nn.Sequential(
+                Conv(ch + temp_ch, ch, k=1),
+                nn.BatchNorm2d(ch),
+                nn.SiLU()
+            ) for ch, temp_ch in zip(channels, temporal_channels)
+        ])
+        
+        # Modified detection branches
+        self.cv2 = nn.ModuleList(
+            nn.Sequential(
+                Conv(ch, ch//2, 3),
+                Conv(ch//2, ch//2, 3),
+                nn.Conv2d(ch//2, 4 * 16, 1)  # DFL regression
+            ) for ch in channels
+        )
+        
+        self.cv3 = nn.ModuleList(
+            nn.Sequential(
+                Conv(ch, ch//2, 3),
+                Conv(ch//2, ch//2, 3),
+                nn.Conv2d(ch//2, nc, 1)  # Class prediction
+            ) for ch in channels
+        )
+        
+        # Additional temporal context modules
+        self.temporal_context = nn.ModuleList([
+            nn.Sequential(
+                Conv(temp_ch, temp_ch//2, 3),
+                nn.BatchNorm2d(temp_ch//2),
+                nn.SiLU()
+            ) for temp_ch in temporal_channels
+        ])
+
+    def forward(self, spatial_features, temporal_features):
+        # Integrate spatial and temporal features
+        fused_features = []
+        for spatial, temporal, fusion, context in zip(
+            spatial_features, 
+            temporal_features, 
+            self.temporal_fusion, 
+            self.temporal_context
+        ):
+            # Process temporal context
+            temporal_ctx = context(temporal)
+            
+            # Concatenate and fuse spatial and temporal features
+            fused = fusion(torch.cat([spatial, temporal_ctx], dim=1))
+            fused_features.append(fused)
+        
+        # Generate detection outputs
+        outputs = []
+        for i, (feat, cv2, cv3) in enumerate(zip(fused_features, self.cv2, self.cv3)):
+            output = torch.cat([cv2(feat), cv3(feat)], 1)
+            outputs.append(output)
+        
+        return outputs
 
 
 class Detect(nn.Module):
