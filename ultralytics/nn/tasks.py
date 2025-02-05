@@ -945,7 +945,14 @@ def attempt_load_one_weight(weight, device=None, inplace=True, fuse=False):
 def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
     """Parse a YOLO model.yaml dictionary into a PyTorch model."""
     import ast
-
+    
+    from colorama import init, Style
+    from termcolor import colored
+    
+    init()
+    
+    print(colored(d, 'green', 'on_red'))
+    print(Style.RESET_ALL)
     # Args
     legacy = True  # backward compatibility for v3/v5/v8/v9 models
     max_channels = float("inf")
