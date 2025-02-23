@@ -88,6 +88,11 @@ from .transformer import (
     TransformerLayer,
 )
 
+from .temporal import (
+    ConvLSTMCell,
+    YOLOConvLSTM,
+)
+
 __all__ = (
     "Conv",
     "Conv2",
@@ -160,4 +165,6 @@ __all__ = (
     "PSA",
     "TorchVision",
     "Index",
+    "ConvLSTMCell",
+    "YOLOConvLSTM",
 )
