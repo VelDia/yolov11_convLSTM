@@ -1,6 +1,6 @@
 # # # # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
 # # # """Temporal modules."""
-
+import thop
 import torch
 import torch.nn as nn
 # # # import torch.nn.functional as F
