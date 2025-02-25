@@ -676,51 +676,51 @@ class BaseModel(nn.Module):
         """
         return model_info(self, detailed=detailed, verbose=verbose, imgsz=imgsz)
 
-    def load(self, weights, freeze_layers = None, verbose=True):
-        """
-        Load the weights into the model.
+    # def load(self, weights, freeze_layers = None, verbose=True):
+    #     """
+    #     Load the weights into the model.
 
-        Args:
-            weights (dict | torch.nn.Module): The pre-trained weights to be loaded.
-            verbose (bool, optional): Whether to log the transfer progress. Defaults to True.
-        """
-        model = weights["model"] if isinstance(weights, dict) else weights  # torchvision models are not dicts
-        csd = model.float().state_dict()  # checkpoint state_dict as FP32
-        csd = intersect_dicts(csd, self.state_dict())  # intersect
-        self.load_state_dict(csd, strict=False)  # load
+    #     Args:
+    #         weights (dict | torch.nn.Module): The pre-trained weights to be loaded.
+    #         verbose (bool, optional): Whether to log the transfer progress. Defaults to True.
+    #     """
+    #     model = weights["model"] if isinstance(weights, dict) else weights  # torchvision models are not dicts
+    #     csd = model.float().state_dict()  # checkpoint state_dict as FP32
+    #     csd = intersect_dicts(csd, self.state_dict())  # intersect
+    #     self.load_state_dict(csd, strict=False)  # load
 
-        if freeze_layers is not None:
-            frozen_layers = 0
+    #     if freeze_layers is not None:
+    #         frozen_layers = 0
 
-            for name, param in self.named_parameters():
+    #         for name, param in self.named_parameters():
 
-                # Check if the layer name contains any of the specified layers to freeze
-                if any(layer in name for layer in freeze_layers):
-                    param.requires_grad = False
-                    frozen_layers += 1
-            if verbose:
-                LOGGER.info(f"Frozen {frozen_layers} layers: {freeze_layers}")
+    #             # Check if the layer name contains any of the specified layers to freeze
+    #             if any(layer in name for layer in freeze_layers):
+    #                 param.requires_grad = False
+    #                 frozen_layers += 1
+    #         if verbose:
+    #             LOGGER.info(f"Frozen {frozen_layers} layers: {freeze_layers}")
 
-        if verbose:
-            LOGGER.info(f"Transferred {len(csd)}/{len(self.model.state_dict())} items from pretrained weights")
+    #     if verbose:
+    #         LOGGER.info(f"Transferred {len(csd)}/{len(self.model.state_dict())} items from pretrained weights")
 
-    def loss(self, batch, preds=None):
-        """
-        Compute loss.
+    # def loss(self, batch, preds=None):
+    #     """
+    #     Compute loss.
 
-        Args:
-            batch (dict): Batch to compute loss on
-            preds (torch.Tensor | List[torch.Tensor]): Predictions.
-        """
-        if getattr(self, "criterion", None) is None:
-            self.criterion = self.init_criterion()
+    #     Args:
+    #         batch (dict): Batch to compute loss on
+    #         preds (torch.Tensor | List[torch.Tensor]): Predictions.
+    #     """
+    #     if getattr(self, "criterion", None) is None:
+    #         self.criterion = self.init_criterion()
 
-        preds = self.forward(batch["img"]) if preds is None else preds
-        return self.criterion(preds, batch)
+    #     preds = self.forward(batch["img"]) if preds is None else preds
+    #     return self.criterion(preds, batch)
 
-    def init_criterion(self):
-        """Initialize the loss criterion for the BaseModel."""
-        raise NotImplementedError("compute_loss() needs to be implemented by task heads")
+    # def init_criterion(self):
+    #     """Initialize the loss criterion for the BaseModel."""
+    #     raise NotImplementedError("compute_loss() needs to be implemented by task heads")
 
 # Original ConvLSTM cell as proposed by Shi et al.
 class ConvLSTMCell(nn.Module):
@@ -769,7 +769,7 @@ class ConvLSTMCell(nn.Module):
         return H, C
     
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class YOLOConvLSTM(nn.Module):
 
@@ -789,19 +789,16 @@ class YOLOConvLSTM(nn.Module):
         # X is a frame sequence (batch_size, num_channels, seq_len, height, width)
 
         # Get the dimensions
-        batch_size, _, seq_len, height, width = X.size()
+        batch_size, seq_len, height, width = X.size()
 
         # Initialize output
-        output = torch.zeros(batch_size, self.out_channels, seq_len, 
-        height, width, device=device)
+        output = torch.zeros(batch_size, self.out_channels, seq_len, height, width) #device = img.device
         
         # Initialize Hidden State
-        H = torch.zeros(batch_size, self.out_channels, 
-        height, width, device=device)
+        H = torch.zeros(batch_size, self.out_channels, height, width)#, device=device)
 
         # Initialize Cell Input
-        C = torch.zeros(batch_size,self.out_channels, 
-        height, width, device=device)
+        C = torch.zeros(batch_size, self.out_channels, height, width)#, device=device)
 
         # Unroll over time steps
         for time_step in range(seq_len):
