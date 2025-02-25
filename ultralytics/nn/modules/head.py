@@ -14,7 +14,7 @@ from .block import DFL, BNContrastiveHead, ContrastiveHead, Proto
 from .conv import Conv, DWConv
 from .transformer import MLP, DeformableTransformerDecoder, DeformableTransformerDecoderLayer
 from .utils import bias_init_with_prob, linear_init
-from .temporal import ConvLSTMCell, YOLOConvLSTM
+# from .temporal import ConvLSTMCell, YOLOConvLSTM
 __all__ = "Detect", "Segment", "Pose", "Classify", "OBB", "RTDETRDecoder", "v10Detect"
 
 # class TemporalDetectionHead(nn.Module):
