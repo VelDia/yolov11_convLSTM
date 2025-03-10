@@ -725,8 +725,7 @@ class BaseModel(nn.Module):
 # Original ConvLSTM cell as proposed by Shi et al.
 class ConvLSTMCell(nn.Module):
     default_act = torch.relu
-    def __init__(self, in_channels, out_channels, 
-    kernel_size=1, padding=1, activation=True, frame_size=(640, 640)):
+    def __init__(self, in_channels, out_channels, kernel_size=1, padding=1, activation=True, frame_size=(640, 640)):
         
         super(ConvLSTMCell, self).__init__()  
         self.act = self.default_act if activation is True else activation if isinstance(activation, nn.Module) else nn.Identity()
@@ -773,8 +772,7 @@ class ConvLSTMCell(nn.Module):
 
 class YOLOConvLSTM(nn.Module):
 
-    def __init__(self, in_channels, out_channels, 
-    kernel_size=1, padding=1, activation = True, frame_size=(640, 640)):
+    def __init__(self, in_channels, out_channels, kernel_size=1, padding=1, activation = True, frame_size=(640, 640)):
 
         super(YOLOConvLSTM, self).__init__()
 
